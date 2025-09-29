@@ -41,10 +41,18 @@ variable "environment" {
 }
 
 # ECS
+
+variable "launch_type" {
+  description = "Define ECS compute launch type"
+  type        = string
+  default     = "FARGATE"
+
+}
+
 variable "model_image_uri" {
   description = "Provide the image URI to set in task definition"
   type        = string
-  default     = "public.ecr.aws/nginx/nginx:stable-perl"
+  default     = "619140547673.dkr.ecr.ap-south-2.amazonaws.com/test-repo:latest"
 
 }
 
