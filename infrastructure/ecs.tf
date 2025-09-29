@@ -10,12 +10,17 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
   ]
 }
 
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/${local.resource_prefix}"
+  retention_in_days = 14
+}
+
 # Task Definition
 resource "aws_ecs_task_definition" "def" {
   family                   = local.resource_prefix
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = [var.launch_type]
   cpu                      = "1024"
   memory                   = "2048"
 
