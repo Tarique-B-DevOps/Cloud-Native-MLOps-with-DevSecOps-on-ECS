@@ -2,11 +2,11 @@
 # ALB SG
 resource "aws_security_group" "alb_sg" {
   name        = "${local.resource_prefix}-alb-sg"
-  description = "Allow HTTP inbound for ALB"
+  description = "Allow inbound for ALB"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "Allow Model Port"
+    description = "Allow HTTP Port"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
