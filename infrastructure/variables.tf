@@ -39,3 +39,18 @@ variable "environment" {
   description = "Environment (e.g., staging, production)"
   type        = string
 }
+
+# ECS
+variable "model_image_uri" {
+  description = "Provide the image URI to set in task definition"
+  type        = string
+  default     = "public.ecr.aws/nginx/nginx:stable-perl"
+
+}
+
+variable "model_port" {
+  description = "Provide the port."
+  type        = number
+  default     = 8888
+
+}
