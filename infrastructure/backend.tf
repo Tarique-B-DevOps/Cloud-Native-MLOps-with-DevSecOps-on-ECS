@@ -1,13 +1,13 @@
-terraform { 
-  cloud { 
-    
-    organization = "tarique-b-devops" 
+terraform {
+  cloud {
 
-    workspaces { 
-      name = "hppm-aws-ecs" 
-    } 
+    organization = "tarique-b-devops"
+
+    workspaces {
+      name = "hppm-aws-ecs"
+    }
   }
-   
+
 }
 
 provider "aws" {
