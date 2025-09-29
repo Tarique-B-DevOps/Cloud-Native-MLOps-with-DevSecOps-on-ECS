@@ -19,3 +19,8 @@ def predict_house_price(house: House):
     features = [[house.Size, house.Bedrooms, house.Age]]
     prediction = model.predict(features)[0]
     return {"predicted_price": round(float(prediction), 2)}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
