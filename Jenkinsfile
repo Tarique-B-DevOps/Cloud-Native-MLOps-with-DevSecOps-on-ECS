@@ -2,12 +2,13 @@ pipeline {
     agent { label 'AI-ML-RTX-NODE' }
 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
-        GIT_TAG               = "${env.GIT_TAG}"
-        IMAGE_TAG             = "${GIT_TAG}"
-        IMAGE_LATEST          = "latest"
-        IAC_DIR               = "infrastructure"
+        AWS_ACCESS_KEY_ID         = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY     = credentials('aws-secret-key')
+        TF_TOKEN_app_terraform_io = credentials('terraform-cloud-token')
+        GIT_TAG                   = "${env.GIT_TAG}"
+        IMAGE_TAG                 = "${GIT_TAG}"
+        IMAGE_LATEST              = "latest"
+        IAC_DIR                   = "infrastructure"
     }
 
     stages {
