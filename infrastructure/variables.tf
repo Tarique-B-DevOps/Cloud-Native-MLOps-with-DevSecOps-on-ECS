@@ -52,7 +52,7 @@ variable "launch_type" {
 variable "model_image_uri" {
   description = "Provide the image URI to set in task definition"
   type        = string
-  default     = "619140547673.dkr.ecr.ap-south-2.amazonaws.com/test-repo:latest"
+  default     = "public.ecr.aws/nginx/nginx:stable-perl"
 
 }
 
@@ -60,5 +60,12 @@ variable "model_port" {
   description = "Provide the port."
   type        = number
   default     = 8888
+
+}
+
+variable "ecs_tasks_count" {
+  description = "The number of tasks to run in ecs service"
+  type        = number
+  default     = 3
 
 }
