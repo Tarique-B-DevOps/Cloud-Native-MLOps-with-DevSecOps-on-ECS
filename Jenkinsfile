@@ -35,6 +35,16 @@ pipeline {
                     env.ECR_REPO_URL     = sh(script: "terraform -chdir=$IAC_DIR output -raw ecr_repo_url", returnStdout: true).trim()
                     env.ECS_CLUSTER_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_cluster_name", returnStdout: true).trim()
                     env.ECS_SERVICE_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_service_name", returnStdout: true).trim()
+
+                    echo """
+                     📦 Extracted Terraform Outputs:
+                        AWS_REGION       = ${env.AWS_REGION}
+                        ALB_DNS          = ${env.ALB_DNS}
+                        API_ENDPOINT     = ${env.API_ENDPOINT}
+                        ECR_REPO_URL     = ${env.ECR_REPO_URL}
+                        ECS_CLUSTER_NAME = ${env.ECS_CLUSTER_NAME}
+                        ECS_SERVICE_NAME = ${env.ECS_SERVICE_NAME}
+                    """
                 }
             }
         }

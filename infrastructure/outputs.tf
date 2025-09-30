@@ -32,3 +32,8 @@ output "api_endpoint" {
   value = aws_apigatewayv2_stage.staging.invoke_url
 
 }
+
+output "region" {
+    value = aws_ecs_cluster.cluster.region
+  
+}
