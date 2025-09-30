@@ -1,20 +1,22 @@
 pipeline {
     agent { label 'AI-ML-RTX-NODE' }
 
+    parameters {
+        string(name: 'model_version', defaultValue: 'v1.0.0', description: 'Version of the ML model')
+    }
+
     environment {
         AWS_ACCESS_KEY_ID         = credentials('aws-access-key')
         AWS_SECRET_ACCESS_KEY     = credentials('aws-secret-key')
         TF_TOKEN_app_terraform_io = credentials('terraform-cloud-token')
-        GIT_TAG                   = "${env.GIT_TAG}"
-        IMAGE_TAG                 = "${GIT_TAG}"
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
+        MODEL_VERSION             = "${params.model_version}"
     }
 
     stages {
 
         stage('Provision ML Infrastructure') {
-            when { tag "v*" }
             steps {
                 echo "🔧 Initializing and applying Terraform for ML infra..."
                 sh """
@@ -25,7 +27,6 @@ pipeline {
         }
 
         stage('Extract Infra Outputs') {
-            when { tag "v*" }
             steps {
                 echo "📦 Extracting ML infrastructure outputs..."
                 script {
@@ -50,7 +51,6 @@ pipeline {
         }
 
         stage('Train ML Model') {
-            when { tag "v*" }
             steps {
                 script {
                     echo "📊 Training the house price prediction model..."
@@ -68,36 +68,34 @@ pipeline {
         }
 
         stage('Containerize Model Service') {
-            when { tag "v*" }
             steps {
                 echo "🐳 Building ML model inference service container..."
                 sh """
+                
                 aws ecr get-login-password --region $AWS_REGION | \
                     docker login --username AWS --password-stdin $ECR_REPO_URL
 
-                docker build -t $ECR_REPO_URL:$IMAGE_TAG -t $ECR_REPO_URL:$IMAGE_LATEST .
+                docker build -t $ECR_REPO_URL:$MODEL_VERSION -t $ECR_REPO_URL:$IMAGE_LATEST .
                 """
             }
         }
 
         stage('Publish Model Image') {
-            when { tag "v*" }
             steps {
                 echo "📤 Publishing ML model container images to ECR..."
                 sh """
-                docker push $ECR_REPO_URL:$IMAGE_TAG
+                docker push $ECR_REPO_URL:$MODEL_VERSION
                 docker push $ECR_REPO_URL:$IMAGE_LATEST
                 """
             }
         }
 
         // stage('Register Updated Task Definition') {
-        //     when { tag "v*" }
         //     steps {
         //         echo "📝 Registering new ECS task definition with updated ML model image..."
         //         sh """
         //         TASK_DEF_JSON=\$(aws ecs describe-task-definition --task-definition $ECS_SERVICE_NAME)
-        //         NEW_TASK_DEF=\$(echo \$TASK_DEF_JSON | jq --arg IMAGE "$ECR_REPO_URL:$IMAGE_TAG" '.taskDefinition.containerDefinitions[0].image=$IMAGE')
+        //         NEW_TASK_DEF=\$(echo \$TASK_DEF_JSON | jq --arg IMAGE "$ECR_REPO_URL:$MODEL_VERSION" '.taskDefinition.containerDefinitions[0].image=$IMAGE')
         //         echo \$NEW_TASK_DEF > task-def.json
         //         aws ecs register-task-definition --cli-input-json file://task-def.json
         //         """
@@ -105,7 +103,6 @@ pipeline {
         // }
 
         // stage('Update Model Service on ECS') {
-        //     when { tag "v*" }
         //     steps {
         //         echo "🚀 Rolling out new ML model version to ECS service..."
         //         sh """
@@ -118,7 +115,6 @@ pipeline {
         // }
 
         stage('Expose Serving Endpoints') {
-            when { tag "v*" }
             steps {
                 echo "✅ ML model successfully deployed and serving!"
                 echo "Inference ALB DNS: $ALB_DNS"
