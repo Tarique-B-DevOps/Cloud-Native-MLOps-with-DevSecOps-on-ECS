@@ -52,8 +52,18 @@ pipeline {
         stage('Train ML Model') {
             when { tag "v*" }
             steps {
-                echo "📊 Training the house price prediction model..."
-                sh "python3 train.py"
+                script {
+                    echo "📊 Training the house price prediction model..."
+                    sh """
+                    python3 -m venv venv
+                    source venv/bin/activate
+
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+
+                    python3 train.py
+                    """
+                }
             }
         }
 
