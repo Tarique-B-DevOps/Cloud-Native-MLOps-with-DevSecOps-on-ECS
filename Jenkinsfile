@@ -10,7 +10,12 @@ pipeline {
         choice(
             name: 'environment_type',
             choices: ['staging', 'development', 'production'],
-            description: 'Target environment'
+            description: 'Target environment for deployment'
+        )
+        string(
+            name: 'aws_region', 
+            defaultValue: 'ap-south-2', 
+            description: 'The AWS region to deploy resources in'
         )
         booleanParam(
             name: 'destroy', 
@@ -22,8 +27,10 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID         = credentials('aws-access-key')
         AWS_SECRET_ACCESS_KEY     = credentials('aws-secret-key')
-        AWS_DEFAULT_REGION        = 'ap-south-2'
+        AWS_DEFAULT_REGION        = "${params.aws_region}"
         TF_TOKEN_app_terraform_io = credentials('terraform-cloud-token')
+        TF_VAR_environment        = "${params.environment_type}"
+        TF_VAR_region             = "${params.aws_region}"
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
