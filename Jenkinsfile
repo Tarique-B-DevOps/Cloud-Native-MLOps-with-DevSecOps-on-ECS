@@ -104,15 +104,30 @@ pipeline {
             }
             steps {
                 script {
+                    echo "🔍 Checking existing Terraform state..."
+
+                    // determine if fresh deployment or updating existing infra
+                    def stateCount = sh(
+                        script: "terraform -chdir=$IAC_DIR state list | wc -l",
+                        returnStdout: true
+                    ).trim()
+
+                    if (stateCount == "0") {
+                        echo "⚠️ No resources found in state. Setting TF_VAR_ecs_tasks_count=0 for initial deployment."
+                        env.TF_VAR_ecs_tasks_count = "0"
+                    } else {
+                        echo "✅ Resources exist in state. Not modifying TF_VAR_ecs_tasks_count"
+                    }
+
                     echo "🔍 Running Terraform plan to detect changes..."
-                    
+
                     // Run terraform plan and capture exit code
                     // 0 = no changes, 1 = error, 2 = changes present
                     def planExitCode = sh(
                         script: "terraform -chdir=$IAC_DIR plan -detailed-exitcode -out=tfplan.out",
                         returnStatus: true
                     )
-                    
+
                     if (planExitCode == 0) {
                         echo "✅ No changes detected. Skipping apply."
                     } else if (planExitCode == 2) {
@@ -127,7 +142,7 @@ pipeline {
                         input message: "⚡ Approve ML Infrastructure changes?",
                             ok: "✅ Apply Changes",
                             submitter: "${env.APPROVER}"
-                    
+
                         slackSend color: "#32CD32", message: """
                         🚀 *Terraform Changes Approved by ${env.APPROVER}*
                         Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
