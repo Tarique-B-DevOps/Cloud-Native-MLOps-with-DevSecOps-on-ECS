@@ -29,7 +29,7 @@ output "alb_dns" {
 }
 
 output "api_endpoint" {
-  value = aws_apigatewayv2_stage.staging.invoke_url
+  value = aws_apigatewayv2_stage.stage.invoke_url
 
 }
 

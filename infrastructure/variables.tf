@@ -69,3 +69,12 @@ variable "ecs_tasks_count" {
   default     = 0 # will be set in pipeline
 
 }
+
+variable "api_routes" {
+  type = map(string)
+  default = {
+    root    = "GET /"
+    health  = "GET /health"
+    predict = "POST /predict"
+  }
+}
