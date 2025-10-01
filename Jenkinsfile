@@ -2,9 +2,21 @@ pipeline {
     agent { label 'AI-ML-RTX-NODE' }
 
     parameters {
-        string(name: 'model_version', defaultValue: 'v1.0.0', description: 'Version of the ML model to release')
-        booleanParam(name: 'destroy', defaultValue: false, description: 'If checked, only run terraform destroy')
-        choice(name: 'environment_type', choices: ['development', 'staging', 'production'], description: 'Target environment')
+        string(
+            name: 'model_version', 
+            defaultValue: 'v1.0.0', 
+            description: 'Version of the ML model to release'
+        )
+        booleanParam(
+            name: 'destroy', 
+            defaultValue: false, 
+            description: 'If checked, only run terraform destroy'
+        )
+        choice(
+            name: 'environment_type',
+            choices: ['staging', 'development', 'production'],
+            description: 'Target environment'
+        )
     }
 
     environment {
