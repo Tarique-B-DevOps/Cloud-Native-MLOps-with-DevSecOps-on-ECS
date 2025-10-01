@@ -29,6 +29,7 @@ pipeline {
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
         RESOURCE_PREFIX           = "price-prediction-model"
         JOB_TYPE                  = "${params.destroy ? 'Destroy' : 'Deployement'}"
+        APPROVER                  = "tarique"
     }
 
     stages {
@@ -105,17 +106,17 @@ pipeline {
                         echo "⚠️ Changes detected in Terraform plan."
 
                         slackSend color: "#FFD700", message: """
-                        ⚡  *Approval Required: Terraform Changes Detected*
+                        🛑  *Approval Required: Terraform Changes Detected*
                         Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
                         """
-                        input message: "Approve ML Infrastructure changes?",
+                        input message: "⚡ Approve ML Infrastructure changes?",
                             ok: "✅ Apply Changes",
-                            submitter: "tarique"
+                            submitter: "${env.APPROVER}"
                     
                         slackSend color: "#32CD32", message: """
-                        🚀 *Terraform Changes Approved by Tarique*
+                        🚀 *Terraform Changes Approved by ${env.APPROVER}*
                         Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
@@ -163,6 +164,14 @@ pipeline {
             }
             steps {
                 echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+
+                input message: """
+                ⚠️ Are you sure you want to destroy all resources including ECR images?
+                This action will permanently delete all associated resources.
+                """,
+                ok: "✅ Proceed",
+                submitter: "tarique"
+
                 sh """
                 echo "Deleting all ECR images for repositories with prefix: $RESOURCE_PREFIX"
 
@@ -331,10 +340,10 @@ pipeline {
 
                     input message: "⚡ Approve deployment of ML model version ${env.MODEL_VERSION} to ECS service ${env.ECS_SERVICE_NAME}?",
                         ok: "✅ Deploy Model",
-                        submitter: "tarique"
+                        submitter: "${env.APPROVER}"
 
                     slackSend color: "#32CD32", message: """
-                    🚀 *Deployment Approved by Tarique*
+                    🚀 *Deployment Approved by ${env.APPROVER}*
                     Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
                     Environment: ${params.environment_type}
                     Deploying model version: ${env.MODEL_VERSION}
