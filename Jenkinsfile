@@ -28,7 +28,7 @@ pipeline {
         IAC_DIR                   = "infrastructure"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
         RESOURCE_PREFIX           = "price-prediction-model"
-        JOB_TYPE                  = "${params.destroy ? 'Destroy' : 'Deploy'}"
+        JOB_TYPE                  = "${params.destroy ? 'Destroy' : 'Deployement'}"
     }
 
     stages {
@@ -37,8 +37,8 @@ pipeline {
             steps {
                 slackSend color: "#FFFF00", message: """
                 🔔 ML Model Pipeline Started
-                Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
                 Job Type: ${env.JOB_TYPE}
+                Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
                 Environment: ${params.environment_type}
                 Model Version: ${env.MODEL_VERSION}
                 """
@@ -300,6 +300,19 @@ pipeline {
                 """
             }
         }
+
+        // use terraform instead of aws cli to update the task def - optional.
+        // stage('Deploy with Terraform') {
+        //     when {
+        //         expression { return !params.destroy }
+        //     }
+        //     steps {
+        //         echo "🔧 Deploying ML model via Terraform using the built image..."
+        //         sh """
+        //         terraform -chdir=$IAC_DIR apply -auto-approve -var="model_image_uri=${env.ECR_REPO_URL}:${env.MODEL_VERSION}"
+        //         """
+        //     }
+        // }
 
         stage('Expose Serving Endpoints') {
             when {
