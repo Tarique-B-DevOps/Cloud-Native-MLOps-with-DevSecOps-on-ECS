@@ -7,15 +7,15 @@ pipeline {
             defaultValue: 'v1.0.0', 
             description: 'Version of the ML model to release'
         )
-        booleanParam(
-            name: 'destroy', 
-            defaultValue: false, 
-            description: 'If checked, only run terraform destroy'
-        )
         choice(
             name: 'environment_type',
             choices: ['staging', 'development', 'production'],
             description: 'Target environment'
+        )
+        booleanParam(
+            name: 'destroy', 
+            defaultValue: false, 
+            description: 'If checked, only run terraform destroy'
         )
     }
 
@@ -139,40 +139,40 @@ pipeline {
             }
             steps {
                 echo "📝 Registering new ECS task definition with updated ML model image..."
-                sh '''
+                sh """
                 set -e
 
                 echo "Fetching current task definition ARN..."
-                CURRENT_TASK_DEF_ARN=$(aws ecs describe-services \
+                CURRENT_TASK_DEF_ARN=\$(aws ecs describe-services \
                     --cluster $ECS_CLUSTER_NAME \
                     --services $ECS_SERVICE_NAME \
                     --query "services[0].taskDefinition" \
                     --output text)
 
                 echo "Downloading current task definition JSON..."
-                aws ecs describe-task-definition --task-definition $CURRENT_TASK_DEF_ARN \
+                aws ecs describe-task-definition --task-definition \$CURRENT_TASK_DEF_ARN \
                 --query "taskDefinition" \
                 | jq "del(.status,.revision,.taskDefinitionArn,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)" \
                 > base-task-def.json
 
-                echo "Updating container image with model version $MODEL_VERSION ..."
-                jq --arg IMAGE "$ECR_REPO_URL:$MODEL_VERSION" \
+                echo "Updating container image with model version ${env.MODEL_VERSION} ..."
+                jq --arg IMAGE "$ECR_REPO_URL:${env.MODEL_VERSION}" \
                 ".containerDefinitions[0].image=\\$IMAGE" base-task-def.json > task-def.json
 
                 echo "Registering new task definition revision..."
-                NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+                NEW_TASK_DEF_ARN=\$(aws ecs register-task-definition \
                     --cli-input-json file://task-def.json \
                     --query "taskDefinition.taskDefinitionArn" \
                     --output text)
 
-                echo "Registered new task definition: $NEW_TASK_DEF_ARN"
+                echo "Registered new task definition: \$NEW_TASK_DEF_ARN"
 
                 echo "Updating ECS service to use new revision..."
                 aws ecs update-service \
                 --cluster $ECS_CLUSTER_NAME \
                 --service $ECS_SERVICE_NAME \
-                --task-definition $NEW_TASK_DEF_ARN
-                '''
+                --task-definition \$NEW_TASK_DEF_ARN
+                """
             }
         }
 
