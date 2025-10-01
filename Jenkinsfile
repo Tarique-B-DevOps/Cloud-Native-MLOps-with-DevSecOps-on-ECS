@@ -43,7 +43,6 @@ pipeline {
             }
         }
 
-
         stage('Scan Terraform Config') {
             when {
                 expression { return !params.destroy }
@@ -156,6 +155,27 @@ pipeline {
 
                 echo "Building Docker image for ML model version $MODEL_VERSION ..."
                 docker build -t $ECR_REPO_URL:$MODEL_VERSION -t $ECR_REPO_URL:$IMAGE_LATEST .
+                """
+            }
+        }
+
+        stage('Scan Container Image') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                echo "🔍 Scanning ML model Docker image for vulnerabilities..."
+                sh """
+                # Scan Docker image with Trivy
+                VULN_COUNT=\$(trivy image --severity HIGH,CRITICAL --format json $ECR_REPO_URL:$MODEL_VERSION \
+                    | jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length')
+
+                echo "⚠️ Number of CRITICAL vulnerabilities found: \$VULN_COUNT"
+
+                if [ "\$VULN_COUNT" -gt 5 ]; then
+                    echo "Container image has CRITICAL vulnerabilities. Failing pipeline."
+                    exit 1
+                fi
                 """
             }
         }
