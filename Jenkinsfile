@@ -17,6 +17,11 @@ pipeline {
             defaultValue: 'ap-south-2', 
             description: 'The AWS region to deploy resources in'
         )
+        string(
+            name: 'ecs_desired_task_count',
+            defaultValue: '3',
+            description: 'Number of tasks to run for the ECS service'
+        )
         booleanParam(
             name: 'destroy', 
             defaultValue: false, 
@@ -31,6 +36,7 @@ pipeline {
         TF_TOKEN_app_terraform_io = credentials('terraform-cloud-token')
         TF_VAR_environment        = "${params.environment_type}"
         TF_VAR_region             = "${params.aws_region}"
+        TF_VAR_ecs_tasks_count    = "${params.ecs_desired_task_count}"
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
