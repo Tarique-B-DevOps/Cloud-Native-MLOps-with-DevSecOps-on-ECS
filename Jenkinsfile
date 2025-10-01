@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         string(name: 'model_version', defaultValue: 'v1.0.0', description: 'Version of the ML model to release')
+        booleanParam(name: 'destroy', defaultValue: false, description: 'If checked, only run terraform destroy')
+        choice(name: 'environment_type', choices: ['development', 'staging', 'production'], description: 'Target environment')
     }
 
     environment {
@@ -11,12 +13,28 @@ pipeline {
         TF_TOKEN_app_terraform_io = credentials('terraform-cloud-token')
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
-        MODEL_VERSION             = "${params.model_version}"
+        MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
     }
 
     stages {
 
+        stage('Terraform Destroy') {
+            when {
+                expression { return params.destroy }
+            }
+            steps {
+                echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+                sh """
+                terraform -chdir=$IAC_DIR init
+                terraform -chdir=$IAC_DIR destroy -auto-approve
+                """
+            }
+        }
+
         stage('Provision ML Infrastructure') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "🔧 Initializing and applying Terraform for ML infra..."
                 sh """
@@ -27,6 +45,9 @@ pipeline {
         }
 
         stage('Extract Infra Outputs') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "📦 Extracting ML infrastructure outputs..."
                 script {
@@ -51,6 +72,9 @@ pipeline {
         }
 
         stage('Train ML Model') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 script {
                     echo "📊 Training the house price prediction model..."
@@ -68,6 +92,9 @@ pipeline {
         }
 
         stage('Containerize Model Service') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "🐳 Building ML model inference service container..."
                 sh """
@@ -82,6 +109,9 @@ pipeline {
         }
 
         stage('Publish Model Image') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "📤 Publishing ML model container images to ECR..."
                 sh """
@@ -92,6 +122,9 @@ pipeline {
         }
 
         stage('Register Updated Task Definition') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "📝 Registering new ECS task definition with updated ML model image..."
                 sh '''
@@ -131,8 +164,10 @@ pipeline {
             }
         }
 
-
         stage('Update Model Service on ECS') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "🚀 Rolling out new ML model version to ECS service..."
                 sh """
@@ -145,6 +180,9 @@ pipeline {
         }
 
         stage('Expose Serving Endpoints') {
+            when {
+                expression { return !params.destroy }
+            }
             steps {
                 echo "✅ ML model successfully deployed and serving!"
                 echo "Inference ALB DNS: $ALB_DNS"
