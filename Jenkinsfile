@@ -264,6 +264,29 @@ pipeline {
             }
         }
 
+        stage('Run ML Service Tests') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                script {
+                    echo "🧪 Running tests using pytest..."
+                    
+                    sh '''
+                    python3 -m venv /tmp/venv_test
+                    source /tmp/venv_test/bin/activate
+
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install httpx pytest
+
+                    # Silence warnings and run tests
+                    PYTHONPATH=$(pwd) pytest -W ignore tests/
+                    '''
+                }
+            }
+        }
+
         stage('Containerize Model Service') {
             when {
                 expression { return !params.destroy }
