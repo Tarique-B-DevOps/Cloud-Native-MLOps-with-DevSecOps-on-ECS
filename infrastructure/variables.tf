@@ -71,10 +71,22 @@ variable "ecs_tasks_count" {
 }
 
 variable "api_routes" {
-  type = map(string)
+  type = map(object({
+    method = string
+    path   = string
+  }))
   default = {
-    root    = "GET /"
-    health  = "GET /health"
-    predict = "POST /predict"
+    root = {
+      method = "GET"
+      path   = "/"
+    }
+    health = {
+      method = "GET"
+      path   = "/health"
+    }
+    predict = {
+      method = "POST"
+      path   = "/predict"
+    }
   }
 }

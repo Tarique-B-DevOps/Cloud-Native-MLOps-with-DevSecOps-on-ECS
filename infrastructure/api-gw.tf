@@ -3,21 +3,24 @@ resource "aws_apigatewayv2_api" "http_api" {
   protocol_type = "HTTP"
 }
 
-# Integration with ALB (no proxy)
-resource "aws_apigatewayv2_integration" "alb_integration" {
+# Create integration per route with explicit ALB path
+resource "aws_apigatewayv2_integration" "alb_integrations" {
+  for_each = var.api_routes
+
   api_id                 = aws_apigatewayv2_api.http_api.id
   integration_type       = "HTTP_PROXY"
-  integration_method     = "ANY"
-  integration_uri        = "http://${aws_lb.alb.dns_name}"
+  integration_method     = each.value.method
+  integration_uri        = "http://${aws_lb.alb.dns_name}${each.value.path}"
   payload_format_version = "1.0"
 }
 
-# Explicit routes from map variable
+# Create routes pointing to the corresponding integration
 resource "aws_apigatewayv2_route" "routes" {
-  for_each  = var.api_routes
+  for_each = var.api_routes
+
   api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = each.value
-  target    = "integrations/${aws_apigatewayv2_integration.alb_integration.id}"
+  route_key = "${each.value.method} ${each.value.path}"
+  target    = "integrations/${aws_apigatewayv2_integration.alb_integrations[each.key].id}"
 }
 
 # Stage

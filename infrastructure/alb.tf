@@ -16,7 +16,7 @@ resource "aws_lb_target_group" "ecs_tg" {
   target_type = "ip"
 
   health_check {
-    path                = regex("/.*", var.api_routes["health"])
+    path                = var.api_routes["health"].path
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
