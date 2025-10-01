@@ -9,8 +9,8 @@ output "ecr_repo_arn" {
 }
 
 output "ecr_repo_url" {
-    value = aws_ecr_repository.repo.repository_url
-  
+  value = aws_ecr_repository.repo.repository_url
+
 }
 
 output "ecs_cluster_name" {
@@ -34,6 +34,6 @@ output "api_endpoint" {
 }
 
 output "region" {
-    value = aws_ecs_cluster.cluster.region
-  
+  value = aws_ecs_cluster.cluster.region
+
 }

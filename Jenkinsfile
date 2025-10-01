@@ -30,15 +30,15 @@ pipeline {
 
     stages {
 
-        stage('Terraform Destroy') {
+        stage('Terraform Init & Validate') {
             when {
-                expression { return params.destroy }
+                expression { return !params.destroy }
             }
             steps {
-                echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+                echo "🔍 Validating Terraform configuration..."
                 sh """
                 terraform -chdir=$IAC_DIR init
-                terraform -chdir=$IAC_DIR destroy -auto-approve
+                terraform -chdir=$IAC_DIR validate
                 """
             }
         }
@@ -50,7 +50,6 @@ pipeline {
             steps {
                 echo "🔧 Initializing and applying Terraform for ML infra..."
                 sh """
-                terraform -chdir=$IAC_DIR init
                 terraform -chdir=$IAC_DIR apply -auto-approve
                 """
             }
@@ -80,6 +79,19 @@ pipeline {
                     ECS_SERVICE_NAME = ${env.ECS_SERVICE_NAME}
                     """
                 }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            when {
+                expression { return params.destroy }
+            }
+            steps {
+                echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+                sh """
+                terraform -chdir=$IAC_DIR init
+                terraform -chdir=$IAC_DIR destroy -auto-approve
+                """
             }
         }
 
