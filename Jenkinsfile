@@ -371,6 +371,7 @@ pipeline {
                     aws ecs update-service \
                         --cluster $ECS_CLUSTER_NAME \
                         --service $ECS_SERVICE_NAME \
+                        --desired-count ${params.ecs_desired_task_count} \
                         --force-new-deployment
 
                     aws ecs wait services-stable \
