@@ -66,10 +66,10 @@ pipeline {
                     echo "🔍 Scanning Terraform configuration for HIGH/CRITICAL issues using Trivy..."
 
                     sh """
-                    trivy config --severity HIGH,CRITICAL --format table .
+                    trivy config --severity HIGH,CRITICAL --format table ${env.IAC_DIR}
 
                     # Count CRITICAL issues using jq
-                    CRITICAL_COUNT=\$(trivy config --severity HIGH,CRITICAL --format json . \
+                    CRITICAL_COUNT=\$(trivy config --severity HIGH,CRITICAL --format json ${env.IAC_DIR} \
                         | jq '[.Results[].Misconfigurations[]? | select(.Severity=="CRITICAL")] | length')
 
                     echo "⚠️ CRITICAL issues found: \$CRITICAL_COUNT"
