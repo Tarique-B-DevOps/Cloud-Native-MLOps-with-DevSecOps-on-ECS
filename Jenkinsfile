@@ -75,6 +75,7 @@ pipeline {
                 aws ecr get-login-password --region $AWS_REGION | \
                     docker login --username AWS --password-stdin $ECR_REPO_URL
 
+                echo "Building Docker image for ML model version $MODEL_VERSION ..."
                 docker build -t $ECR_REPO_URL:$MODEL_VERSION -t $ECR_REPO_URL:$IMAGE_LATEST .
                 """
             }
@@ -90,17 +91,46 @@ pipeline {
             }
         }
 
-        // stage('Register Updated Task Definition') {
-        //     steps {
-        //         echo "📝 Registering new ECS task definition with updated ML model image..."
-        //         sh """
-        //         TASK_DEF_JSON=\$(aws ecs describe-task-definition --task-definition $ECS_SERVICE_NAME)
-        //         NEW_TASK_DEF=\$(echo \$TASK_DEF_JSON | jq --arg IMAGE "$ECR_REPO_URL:$MODEL_VERSION" '.taskDefinition.containerDefinitions[0].image=$IMAGE')
-        //         echo \$NEW_TASK_DEF > task-def.json
-        //         aws ecs register-task-definition --cli-input-json file://task-def.json
-        //         """
-        //     }
-        // }
+        stage('Register Updated Task Definition') {
+            steps {
+                echo "📝 Registering new ECS task definition with updated ML model image..."
+                sh """
+                set -e
+
+                echo "Fetching current task definition ARN..."
+                CURRENT_TASK_DEF_ARN=$(aws ecs describe-services \
+                    --cluster $ECS_CLUSTER_NAME \
+                    --services $ECS_SERVICE_NAME \
+                    --query "services[0].taskDefinition" \
+                    --output text)
+
+                echo "Downloading current task definition JSON..."
+                aws ecs describe-task-definition --task-definition $CURRENT_TASK_DEF_ARN \
+                --query "taskDefinition" \
+                | jq 'del(.status,.revision,.taskDefinitionArn,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)' \
+                > base-task-def.json
+
+                echo "Updating container image with model version $MODEL_VERSION ..."
+                jq --arg IMAGE "$ECR_REPO_URL:$MODEL_VERSION" \
+                '.containerDefinitions[0].image=$IMAGE' base-task-def.json > task-def.json
+
+                echo "Registering new task definition revision..."
+                NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+                    --cli-input-json file://task-def.json \
+                    --query "taskDefinition.taskDefinitionArn" \
+                    --output text)
+
+                echo "Registered new task definition: $NEW_TASK_DEF_ARN"
+
+                echo "🚀 Updating ECS service to use new revision..."
+                aws ecs update-service \
+                --cluster $ECS_CLUSTER_NAME \
+                --service $ECS_SERVICE_NAME \
+                --task-definition $NEW_TASK_DEF_ARN
+                """
+            }
+        }
+
 
         // stage('Update Model Service on ECS') {
         //     steps {
