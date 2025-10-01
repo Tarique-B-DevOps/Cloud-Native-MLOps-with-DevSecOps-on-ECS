@@ -103,13 +103,23 @@ pipeline {
                         echo "✅ No changes detected. Skipping apply."
                     } else if (planExitCode == 2) {
                         echo "⚠️ Changes detected in Terraform plan."
-                        
-                        slackSend color: "#FFD700", message: "🛑 Terraform changes detected for ML infrastructure. Approval required before applying."
+
+                        slackSend color: "#FFD700", message: """
+                        🛑 *Approval Required: Terraform Changes Detected*
+                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                        Environment: ${params.environment_type}
+                        Model Version: ${env.MODEL_VERSION}
+                        """
                         input message: "Approve ML Infrastructure changes?",
                             ok: "Apply Changes",
                             submitter: "tarique"
                     
-                        slackSend color: "#32CD32", message: "🚀 Terraform changes approved by Tarique. Applying now."
+                        slackSend color: "#32CD32", message: """
+                        🚀 *Terraform Changes Approved by Tarique*
+                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                        Environment: ${params.environment_type}
+                        Model Version: ${env.MODEL_VERSION}
+                        """
 
                         echo "🔧 Applying Terraform changes..."
                         sh "terraform -chdir=$IAC_DIR apply -auto-approve tfplan.out"
