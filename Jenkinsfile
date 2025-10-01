@@ -9,7 +9,7 @@ pipeline {
         )
         choice(
             name: 'environment_type',
-            choices: ['staging', 'development', 'production'],
+            choices: ['staging', 'dev', 'prod'],
             description: 'Target environment for deployment'
         )
         string(
