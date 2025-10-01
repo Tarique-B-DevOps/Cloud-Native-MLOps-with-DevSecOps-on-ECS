@@ -89,10 +89,30 @@ pipeline {
                 expression { return !params.destroy }
             }
             steps {
-                echo "🔧 Initializing and applying Terraform for ML infra..."
-                sh """
-                terraform -chdir=$IAC_DIR apply -auto-approve
-                """
+                script {
+                    echo "🔍 Running Terraform plan to detect changes..."
+                    
+                    // Run terraform plan and capture exit code
+                    // 0 = no changes, 1 = error, 2 = changes present
+                    def planExitCode = sh(
+                        script: "terraform -chdir=$IAC_DIR plan -detailed-exitcode -out=tfplan.out",
+                        returnStatus: true
+                    )
+                    
+                    if (planExitCode == 0) {
+                        echo "✅ No changes detected. Skipping apply."
+                    } else if (planExitCode == 2) {
+                        echo "⚠️ Changes detected in Terraform plan."
+                        input message: "Approve ML Infrastructure changes?",
+                            ok: "Apply Changes",
+                            submitter: "tarique"
+                        
+                        echo "🔧 Applying Terraform changes..."
+                        sh "terraform -chdir=$IAC_DIR apply -auto-approve tfplan.out"
+                    } else {
+                        error "❌ Terraform plan failed with exit code ${planExitCode}. Check logs."
+                    }
+                }
             }
         }
 
