@@ -276,6 +276,8 @@ pipeline {
                     source /tmp/venv/bin/activate
 
                     PYTHONPATH=$(pwd) pytest -W ignore tests/
+
+                    rm rf /tmp/venv
                     '''
                 }
             }
@@ -292,7 +294,10 @@ pipeline {
                     docker login --username AWS --password-stdin $ECR_REPO_URL
 
                 echo "Building Docker image for ML model version $MODEL_VERSION ..."
-                docker build -t $ECR_REPO_URL:$MODEL_VERSION -t $ECR_REPO_URL:$IMAGE_LATEST .
+                docker build \
+                --build-arg MODEL_VERSION=$MODEL_VERSION \
+                -t $ECR_REPO_URL:$MODEL_VERSION \
+                -t $ECR_REPO_URL:$IMAGE_LATEST .
                 """
             }
         }

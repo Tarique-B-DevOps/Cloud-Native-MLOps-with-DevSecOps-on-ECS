@@ -88,5 +88,9 @@ variable "api_routes" {
       method = "POST"
       path   = "/predict"
     }
+     version = {
+      method = "GET"
+      path   = "/version"
+    }
   }
 }
