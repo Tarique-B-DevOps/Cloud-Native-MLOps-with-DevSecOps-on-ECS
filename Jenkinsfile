@@ -277,7 +277,7 @@ pipeline {
 
                     PYTHONPATH=$(pwd) pytest -W ignore tests/
 
-                    rm rf /tmp/venv
+                    rm -rf /tmp/venv
                     '''
                 }
             }
