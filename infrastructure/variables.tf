@@ -52,7 +52,7 @@ variable "launch_type" {
 variable "model_image_uri" {
   description = "Provide the image URI to set in task definition"
   type        = string
-  default     = "public.ecr.aws/nginx/nginx:stable-perl"
+  default     = "public.ecr.aws/nginx/nginx:stable-perl" # using as placeholder, later will be overridden by model iamge
 
 }
 
@@ -66,6 +66,6 @@ variable "model_port" {
 variable "ecs_tasks_count" {
   description = "The number of tasks to run in ecs service"
   type        = number
-  default     = 3
+  default     = 0
 
 }
