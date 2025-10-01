@@ -38,7 +38,7 @@ pipeline {
                 slackSend color: "#FFFF00", message: """
                 🔔 ML Model Pipeline Started
                 Job Type: ${env.JOB_TYPE}
-                Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
                 Environment: ${params.environment_type}
                 Model Version: ${env.MODEL_VERSION}
                 """
@@ -106,7 +106,7 @@ pipeline {
 
                         slackSend color: "#FFD700", message: """
                         ⚡  *Approval Required: Terraform Changes Detected*
-                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}/console|Open>)
+                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
                         """
@@ -116,7 +116,7 @@ pipeline {
                     
                         slackSend color: "#32CD32", message: """
                         🚀 *Terraform Changes Approved by Tarique*
-                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
                         """
@@ -322,7 +322,7 @@ pipeline {
 
                     slackSend color: "#FFD700", message: """
                     🛑 *Approval Required: ECS Service Update*
-                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                     Environment: ${params.environment_type}
                     Model Version: ${env.MODEL_VERSION}
                     ECS Service: ${env.ECS_SERVICE_NAME}
@@ -335,7 +335,7 @@ pipeline {
 
                     slackSend color: "#32CD32", message: """
                     🚀 *Deployment Approved by Tarique*
-                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
                     Environment: ${params.environment_type}
                     Deploying model version: ${env.MODEL_VERSION}
                     ECS Service: ${env.ECS_SERVICE_NAME}
@@ -392,7 +392,7 @@ pipeline {
             slackSend color: "#00FF00", message: """
             ✅ ML Model Pipeline Succeeded
             Job Type: ${env.JOB_TYPE}
-            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
             ECS Service: ${env.ECS_SERVICE_NAME}
@@ -404,17 +404,17 @@ pipeline {
             slackSend failOnError: true, color: "#FF0000", message: """
             ❌ ML Model Pipeline Failed
             Job Type: ${env.JOB_TYPE}
-            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}/console|Open>)
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console/console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
-            Check console logs for details: <${env.BUILD_URL}|Open>
+            Check console logs for details: <${env.BUILD_URL}console|Open>
             """
         }
         unstable {
             slackSend color: "#FFA500", message: """
             ⚠️ ML Model Pipeline Unstable
             Job Type: ${env.JOB_TYPE}
-            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
             """
