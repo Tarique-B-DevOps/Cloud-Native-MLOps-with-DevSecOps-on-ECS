@@ -113,7 +113,14 @@ pipeline {
                     ).trim()
 
                     def ecsCount = (stateCount == "0") ? "0" : params.ecs_desired_task_count
-                    echo "⚙️ Setting ECS desired task count to ${ecsCount}"
+
+                    if (stateCount == "0") {
+                        echo "ℹ️ No existing resources found. This is a NEW deployment."
+                        echo "ℹ️ ECS desired task count is temporarily set to 0 for initial deployment."
+                        echo "ℹ️ After the ML model is built and deployed, the ECS task count will be set to the provided value: ${params.ecs_desired_task_count}"
+                    } else {
+                        echo "✅ Existing resources found. Updating infrastructure. ECS desired task count remains ${ecsCount}"
+                    }
 
                     echo "🔍 Running Terraform plan to detect changes..."
 
