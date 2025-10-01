@@ -136,6 +136,20 @@ pipeline {
             }
         }
 
+        stage('Snyk Code Scan') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'snyk_token', variable: 'SNYK_TOKEN')]) {
+                    sh """
+                    echo "🔍 Running Snyk Code scan..."
+                    snyk code test --severity-threshold=high
+                    """
+                }
+            }
+        }
+
         stage('Train ML Model') {
             when {
                 expression { return !params.destroy }
