@@ -1,6 +1,6 @@
 # Common Vars Values
 tags = {
-  "App"         = "price-prediction-model"
+  "App" = "price-prediction-model"
 }
 
 # VPC Vars Values
