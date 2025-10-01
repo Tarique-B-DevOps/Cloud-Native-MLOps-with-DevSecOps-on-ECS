@@ -273,14 +273,8 @@ pipeline {
                     echo "🧪 Running tests using pytest..."
                     
                     sh '''
-                    python3 -m venv /tmp/venv_test
-                    source /tmp/venv_test/bin/activate
+                    source /tmp/venv/bin/activate
 
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install httpx pytest
-
-                    # Silence warnings and run tests
                     PYTHONPATH=$(pwd) pytest -W ignore tests/
                     '''
                 }
