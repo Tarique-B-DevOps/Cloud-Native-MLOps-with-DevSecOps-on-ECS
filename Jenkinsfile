@@ -26,6 +26,7 @@ pipeline {
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
+        RESOURCE_PREFIX           ="price-prediction-model"
     }
 
     stages {
@@ -130,6 +131,28 @@ pipeline {
             steps {
                 echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
                 sh """
+                echo "Deleting all ECR images for repositories with prefix: $RESOURCE_PREFIX"
+
+                # List all repos with the given prefix
+                REPOS=\$(aws ecr describe-repositories \
+                            --query "repositories[?starts_with(repositoryName, '$RESOURCE_PREFIX')].repositoryName" \
+                            --output text)
+
+                for REPO in \$REPOS; do
+                    echo "Deleting all images in repository: \$REPO"
+                    
+                    # Get all image IDs
+                    IMAGES=\$(aws ecr list-images --repository-name \$REPO --query 'imageIds[*]' --output json)
+                    
+                    if [ "\$IMAGES" != "[]" ]; then
+                        aws ecr batch-delete-image --repository-name \$REPO --image-ids "\$IMAGES"
+                        echo "Deleted all images in \$REPO"
+                    else
+                        echo "ℹNo images found in \$REPO"
+                    fi
+                done
+
+                echo "🔧 Proceeding with Terraform destroy..."
                 terraform -chdir=$IAC_DIR init
                 terraform -chdir=$IAC_DIR destroy -auto-approve
                 """
