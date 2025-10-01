@@ -2,7 +2,7 @@ pipeline {
     agent { label 'AI-ML-RTX-NODE' }
 
     parameters {
-        string(name: 'model_version', defaultValue: 'v1.0.0', description: 'Version of the ML model')
+        string(name: 'model_version', defaultValue: 'v1.0.0', description: 'Version of the ML model to release')
     }
 
     environment {
@@ -94,7 +94,7 @@ pipeline {
         stage('Register Updated Task Definition') {
             steps {
                 echo "📝 Registering new ECS task definition with updated ML model image..."
-                sh """
+                sh '''
                 set -e
 
                 echo "Fetching current task definition ARN..."
@@ -107,12 +107,12 @@ pipeline {
                 echo "Downloading current task definition JSON..."
                 aws ecs describe-task-definition --task-definition $CURRENT_TASK_DEF_ARN \
                 --query "taskDefinition" \
-                | jq 'del(.status,.revision,.taskDefinitionArn,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)' \
+                | jq "del(.status,.revision,.taskDefinitionArn,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)" \
                 > base-task-def.json
 
                 echo "Updating container image with model version $MODEL_VERSION ..."
                 jq --arg IMAGE "$ECR_REPO_URL:$MODEL_VERSION" \
-                '.containerDefinitions[0].image=$IMAGE' base-task-def.json > task-def.json
+                ".containerDefinitions[0].image=\\$IMAGE" base-task-def.json > task-def.json
 
                 echo "Registering new task definition revision..."
                 NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
@@ -122,27 +122,27 @@ pipeline {
 
                 echo "Registered new task definition: $NEW_TASK_DEF_ARN"
 
-                echo "🚀 Updating ECS service to use new revision..."
+                echo "Updating ECS service to use new revision..."
                 aws ecs update-service \
                 --cluster $ECS_CLUSTER_NAME \
                 --service $ECS_SERVICE_NAME \
                 --task-definition $NEW_TASK_DEF_ARN
-                """
+                '''
             }
         }
 
 
-        // stage('Update Model Service on ECS') {
-        //     steps {
-        //         echo "🚀 Rolling out new ML model version to ECS service..."
-        //         sh """
-        //         aws ecs update-service \
-        //             --cluster $ECS_CLUSTER_NAME \
-        //             --service $ECS_SERVICE_NAME \
-        //             --force-new-deployment
-        //         """
-        //     }
-        // }
+        stage('Update Model Service on ECS') {
+            steps {
+                echo "🚀 Rolling out new ML model version to ECS service..."
+                sh """
+                aws ecs update-service \
+                    --cluster $ECS_CLUSTER_NAME \
+                    --service $ECS_SERVICE_NAME \
+                    --force-new-deployment
+                """
+            }
+        }
 
         stage('Expose Serving Endpoints') {
             steps {
