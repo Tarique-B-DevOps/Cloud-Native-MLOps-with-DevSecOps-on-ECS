@@ -105,13 +105,13 @@ pipeline {
                         echo "⚠️ Changes detected in Terraform plan."
 
                         slackSend color: "#FFD700", message: """
-                        🛑 *Approval Required: Terraform Changes Detected*
+                        ⚡  *Approval Required: Terraform Changes Detected*
                         Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
                         """
                         input message: "Approve ML Infrastructure changes?",
-                            ok: "Apply Changes",
+                            ok: "✅ Apply Changes",
                             submitter: "tarique"
                     
                         slackSend color: "#32CD32", message: """
@@ -317,23 +317,50 @@ pipeline {
                 expression { return !params.destroy }
             }
             steps {
-                echo "🚀 Starting ECS service update for ML model..."
-                sh """
-                set -e
+                script {
+                    echo "🚀 Preparing ECS service update for ML model..."
 
-                aws ecs update-service \
-                    --cluster $ECS_CLUSTER_NAME \
-                    --service $ECS_SERVICE_NAME \
-                    --force-new-deployment
+                    slackSend color: "#FFD700", message: """
+                    🛑 *Approval Required: ECS Service Update*
+                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                    Environment: ${params.environment_type}
+                    Model Version: ${env.MODEL_VERSION}
+                    ECS Service: ${env.ECS_SERVICE_NAME}
+                    Cluster: ${env.ECS_CLUSTER_NAME}
+                    """
 
-                aws ecs wait services-stable \
-                    --cluster $ECS_CLUSTER_NAME \
-                    --services $ECS_SERVICE_NAME
+                    input message: "⚡ Approve deployment of ML model version ${env.MODEL_VERSION} to ECS service ${env.ECS_SERVICE_NAME}?",
+                        ok: "✅ Deploy Model",
+                        submitter: "tarique"
 
-                echo "✅ ECS service is now stable. All tasks are running the new revision."
-                """
+                    slackSend color: "#32CD32", message: """
+                    🚀 *Deployment Approved by Tarique*
+                    Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                    Environment: ${params.environment_type}
+                    Deploying model version: ${env.MODEL_VERSION}
+                    ECS Service: ${env.ECS_SERVICE_NAME}
+                    Cluster: ${env.ECS_CLUSTER_NAME}
+                    """
+
+                    echo "🚀 Starting ECS service update for ML model..."
+                    sh """
+                    set -e
+
+                    aws ecs update-service \
+                        --cluster $ECS_CLUSTER_NAME \
+                        --service $ECS_SERVICE_NAME \
+                        --force-new-deployment
+
+                    aws ecs wait services-stable \
+                        --cluster $ECS_CLUSTER_NAME \
+                        --services $ECS_SERVICE_NAME
+
+                    echo "✅ ECS service is now stable. All tasks are running the new revision."
+                    """
+                }
             }
         }
+
 
         // use terraform instead of aws cli to update the task def - optional.
         // stage('Deploy with Terraform') {
