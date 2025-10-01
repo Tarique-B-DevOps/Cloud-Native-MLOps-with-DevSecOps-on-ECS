@@ -30,6 +30,20 @@ pipeline {
 
     stages {
 
+        stage('Notify Start') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                slackSend color: "#FFFF00", message: """
+                🔔 ML Model Deployment Pipeline Started
+                Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                Environment: ${params.environment_type}
+                Model Version: ${env.MODEL_VERSION}
+                """
+            }
+        }
+
         stage('Terraform Init & Validate') {
             when {
                 expression { return !params.destroy }
@@ -277,4 +291,39 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            slackSend color: "#00FF00", message: """
+            ✅ ML Model Deployment Pipeline Succeeded
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Environment: ${params.environment_type}
+            Model Version: ${env.MODEL_VERSION}
+            ECS Service: ${env.ECS_SERVICE_NAME}
+            API Endpoint: ${env.API_ENDPOINT}
+            ALB DNS: ${env.ALB_DNS}
+            """
+        }
+        failure {
+            slackSend failOnError: true, color: "#FF0000", message: """
+            ❌ ML Model Deployment Pipeline Failed
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Environment: ${params.environment_type}
+            Model Version: ${env.MODEL_VERSION}
+            Check console logs for details: <${env.BUILD_URL}|Open>
+            """
+        }
+        unstable {
+            slackSend color: "#FFA500", message: """
+            ⚠️ ML Model Deployment Pipeline Unstable
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Environment: ${params.environment_type}
+            Model Version: ${env.MODEL_VERSION}
+            """
+        }
+        always {
+            echo "📌 Pipeline completed. Slack notifications sent."
+        }
+    }
+
 }
