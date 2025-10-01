@@ -184,12 +184,24 @@ pipeline {
                 expression { return !params.destroy }
             }
             steps {
-                echo "🚀 Rolling out new ML model version to ECS service..."
+                echo "🚀 Starting ECS service update for ML model..."
+
                 sh """
+                set -e
+
+                echo "🔹 Triggering new deployment for service: $ECS_SERVICE_NAME on cluster: $ECS_CLUSTER_NAME"
                 aws ecs update-service \
                     --cluster $ECS_CLUSTER_NAME \
                     --service $ECS_SERVICE_NAME \
                     --force-new-deployment
+
+                echo "⏳ Deployment triggered. Waiting for ECS service to become stable..."
+                aws ecs wait services-stable \
+                    --cluster $ECS_CLUSTER_NAME \
+                    --services $ECS_SERVICE_NAME
+
+                echo "✅ ECS service is now stable. All tasks are running the new revision."
+                echo "🎉 ML model deployment successfully rolled out!"
                 """
             }
         }
