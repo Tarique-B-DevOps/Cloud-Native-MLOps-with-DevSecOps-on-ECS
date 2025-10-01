@@ -106,7 +106,7 @@ pipeline {
 
                         slackSend color: "#FFD700", message: """
                         ⚡  *Approval Required: Terraform Changes Detected*
-                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+                        Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}/console|Open>)
                         Environment: ${params.environment_type}
                         Model Version: ${env.MODEL_VERSION}
                         """
@@ -404,7 +404,7 @@ pipeline {
             slackSend failOnError: true, color: "#FF0000", message: """
             ❌ ML Model Pipeline Failed
             Job Type: ${env.JOB_TYPE}
-            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)
+            Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}/console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
             Check console logs for details: <${env.BUILD_URL}|Open>
