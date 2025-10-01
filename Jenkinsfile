@@ -43,6 +43,34 @@ pipeline {
             }
         }
 
+
+        stage('Scan Terraform Config') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                script {
+                    echo "🔍 Scanning Terraform configuration for HIGH/CRITICAL issues using Trivy..."
+
+                    sh """
+                    trivy config --severity HIGH,CRITICAL --format table .
+
+                    # Count CRITICAL issues using jq
+                    CRITICAL_COUNT=\$(trivy config --severity HIGH,CRITICAL --format json . \
+                        | jq '[.Results[].Misconfigurations[]? | select(.Severity=="CRITICAL")] | length')
+
+                    echo "⚠️ CRITICAL issues found: \$CRITICAL_COUNT"
+
+                    # Fail pipeline if more than 5
+                    if [ "\$CRITICAL_COUNT" -gt 5 ]; then
+                        echo "Too many CRITICAL issues (>5). Failing pipeline."
+                        exit 1
+                    fi
+                    """
+                }
+            }
+        }
+
         stage('Provision ML Infrastructure') {
             when {
                 expression { return !params.destroy }
