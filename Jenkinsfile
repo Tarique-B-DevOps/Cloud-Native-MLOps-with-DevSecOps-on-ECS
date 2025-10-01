@@ -112,19 +112,15 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    if (stateCount == "0") {
-                        echo "⚠️ No resources found in state. Setting TF_VAR_ecs_tasks_count=0 for initial deployment."
-                        env.TF_VAR_ecs_tasks_count = "0"
-                    } else {
-                        echo "✅ Resources exist in state. Not modifying TF_VAR_ecs_tasks_count"
-                    }
+                    def ecsCount = (stateCount == "0") ? "0" : params.ecs_desired_task_count
+                    echo "⚙️ Setting ECS desired task count to ${ecsCount}"
 
                     echo "🔍 Running Terraform plan to detect changes..."
 
                     // Run terraform plan and capture exit code
                     // 0 = no changes, 1 = error, 2 = changes present
                     def planExitCode = sh(
-                        script: "terraform -chdir=$IAC_DIR plan -detailed-exitcode -out=tfplan.out",
+                        script: "terraform -chdir=$IAC_DIR plan -var ecs_tasks_count=${ecsCount} -detailed-exitcode -out=tfplan.out",
                         returnStatus: true
                     )
 
@@ -151,7 +147,7 @@ pipeline {
                         """
 
                         echo "🔧 Applying Terraform changes..."
-                        sh "terraform -chdir=$IAC_DIR apply -auto-approve tfplan.out"
+                        sh "terraform -chdir=$IAC_DIR apply -var ecs_tasks_count=${ecsCount} -auto-approve tfplan.out"
                     } else {
                         error "❌ Terraform plan failed with exit code ${planExitCode}. Check logs."
                     }
