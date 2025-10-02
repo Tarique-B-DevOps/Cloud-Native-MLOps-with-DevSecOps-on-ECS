@@ -422,16 +422,16 @@ pipeline {
                     Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                     Environment: ${params.environment_type}
                     ML Model Version: ${env.MODEL_VERSION}
-                    Frontend Version: ${env.FRONTEND_VERSION ?: 'N/A'}
+                    Frontend Version: ${env.MODEL_VERSION}
                     ECS Service: ${env.ECS_SERVICE_NAME}
                     Cluster: ${env.ECS_CLUSTER_NAME}
 
                     ⚡ After approval, the pipeline will:
                     • Update ECS service with ML model ${env.MODEL_VERSION}
-                    • Deploy frontend version ${env.FRONTEND_VERSION} to S3
+                    • Deploy frontend version ${env.MODEL_VERSION} to S3
                     """
 
-                    input message: "⚡ Approve deployment of ML model ${env.MODEL_VERSION} and frontend ${env.FRONTEND_VERSION}?",
+                    input message: "⚡ Approve deployment of ML model ${env.MODEL_VERSION} and frontend ${env.MODEL_VERSION}?",
                     ok: "✅ Deploy Both",
                     submitter: "${env.APPROVER}"
 
@@ -512,6 +512,7 @@ pipeline {
             Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
+            Frontend Version: ${env.MODEL_VERSION}
             ECS Service: ${env.ECS_SERVICE_NAME}
             API Endpoint: ${env.API_ENDPOINT}
             Cloudfront URL: ${env.FRONTEND_URL}
