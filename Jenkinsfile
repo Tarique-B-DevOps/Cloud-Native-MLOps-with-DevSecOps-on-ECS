@@ -39,6 +39,7 @@ pipeline {
         TF_VAR_ecs_tasks_count    = "${params.ecs_desired_task_count}"
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
+        FRONTEND_DIR              = "frontend"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
         RESOURCE_PREFIX           = "price-prediction-model"
         JOB_TYPE                  = "${params.destroy ? 'Destroy' : 'Deployement'}"
@@ -175,6 +176,8 @@ pipeline {
                     env.ECR_REPO_URL     = sh(script: "terraform -chdir=$IAC_DIR output -raw ecr_repo_url", returnStdout: true).trim()
                     env.ECS_CLUSTER_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_cluster_name", returnStdout: true).trim()
                     env.ECS_SERVICE_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_service_name", returnStdout: true).trim()
+                    env.S3_BUCKET_NAME   = sh(script: "terraform -chdir=$IAC_DIR output -raw s3_bucket_name", returnStdout: true).trim()
+                    env.FRONTEND_URL     = sh(script: "terraform -chdir=$IAC_DIR output -raw frontend_url", returnStdout: true).trim()
 
                     echo """
                     📦 Extracted Terraform Outputs:
@@ -184,6 +187,8 @@ pipeline {
                     ECR_REPO_URL     = ${env.ECR_REPO_URL}
                     ECS_CLUSTER_NAME = ${env.ECS_CLUSTER_NAME}
                     ECS_SERVICE_NAME = ${env.ECS_SERVICE_NAME}
+                    S3_BUCKET_NAME   = ${env.S3_BUCKET_NAME}
+                    FRONTEND_URL     = ${env.FRONTEND_URL}
                     """
                 }
             }
@@ -259,6 +264,24 @@ pipeline {
                     pip install -r requirements.txt
 
                     python3 train.py
+                    """
+                }
+            }
+        }
+
+        stage('Build WebApp') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                dir("${env.FRONTEND_DIR}") {
+                    echo "🏗️ Building frontend webapp with API=${API_ENDPOINT}, VERSION=${MODEL_VERSION}"
+                    sh """
+                    export VITE_API_URL=$API_ENDPOINT
+                    export VITE_APP_VERSION=$MODEL_VERSION
+
+                    npm ci
+                    npm run build
                     """
                 }
             }
