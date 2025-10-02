@@ -199,10 +199,12 @@ pipeline {
                 expression { return params.destroy }
             }
             steps {
-                echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+                echo "⚠️ Destroy parameter is checked. Running Terraform destroy..."
 
                 input message: """
-                ⚠️ Are you sure you want to destroy all resources including ECR images?
+                ⚠️ Are you sure you want to destroy all resources including:
+                • ECR images
+                • Frontend files in S3 buckets with prefix $RESOURCE_PREFIX
                 This action will permanently delete all associated resources.
                 """,
                 ok: "✅ Proceed",
@@ -222,10 +224,20 @@ pipeline {
                     
                     if [ "\$IMAGES" != "[]" ]; then
                         aws ecr batch-delete-image --repository-name \$REPO --image-ids "\$IMAGES"
-                        echo "Deleted all images in \$REPO"
+                        echo "✅ Deleted all images in \$REPO"
                     else
-                        echo "ℹNo images found in \$REPO"
+                        echo "ℹ No images found in \$REPO"
                     fi
+                done
+
+                echo "Deleting all frontend files from S3 buckets with prefix: $RESOURCE_PREFIX"
+
+                BUCKETS=\$(aws s3api list-buckets --query "Buckets[?starts_with(Name, '$RESOURCE_PREFIX')].Name" --output text)
+
+                for BUCKET in \$BUCKETS; do
+                    echo "Deleting all objects in bucket: \$BUCKET"
+                    aws s3 rm s3://\$BUCKET --recursive
+                    echo "✅ All files deleted from \$BUCKET"
                 done
 
                 echo "🔧 Proceeding with Terraform destroy..."
