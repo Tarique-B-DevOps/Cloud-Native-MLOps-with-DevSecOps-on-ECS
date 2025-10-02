@@ -3,7 +3,7 @@ resource "aws_apigatewayv2_api" "http_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins     = ["*"]
+    allow_origins     = ["https://${aws_cloudfront_distribution.web_distro.domain_name}"]
     allow_methods     = ["*"]
     allow_headers     = ["*"]
     expose_headers    = ["*"]
