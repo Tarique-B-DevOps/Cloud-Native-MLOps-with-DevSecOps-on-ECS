@@ -16,7 +16,7 @@ resource "aws_lb_target_group" "ecs_tg" {
   target_type = "ip"
 
   health_check {
-    path                = "/"
+    path                = var.api_routes["health"].path
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
@@ -25,14 +25,35 @@ resource "aws_lb_target_group" "ecs_tg" {
   }
 }
 
-# Listener
+# Listener (default = 404 response)
 resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = "404"
+    }
+  }
+}
+
+# Listener Rule for path-based routing
+resource "aws_lb_listener_rule" "ecs_rule" {
+  listener_arn = aws_lb_listener.http_listener.arn
+  priority     = 1
+
+  action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.ecs_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
   }
 }

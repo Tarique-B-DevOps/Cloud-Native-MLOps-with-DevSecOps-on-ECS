@@ -1,0 +1,13 @@
+infrastructure/
+infrastructure/**
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform/**
+*.env
+venv/
+tmp/

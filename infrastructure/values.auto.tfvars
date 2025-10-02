@@ -1,9 +1,6 @@
 # Common Vars Values
-region      = "ap-south-2"
-environment = "staging"
 tags = {
-  "Environment" = "staging"
-  "App"         = "price-prediction-model"
+  "App" = "price-prediction-model"
 }
 
 # VPC Vars Values

@@ -43,17 +43,23 @@ resource "aws_ecs_task_definition" "def" {
           awslogs-stream-prefix = "ecs"
         }
       }
+      #   healthCheck = {
+      #     command     = ["CMD-SHELL", "curl -f http://localhost:${var.model_port}/health || exit 1"]
+      #     interval    = 30
+      #     timeout     = 5
+      #     retries     = 3
+      #     startPeriod = 10
+      #   }
     }
   ])
 }
-
 
 # ECS Service
 resource "aws_ecs_service" "app_service" {
   name            = local.resource_prefix
   cluster         = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.def.arn
-  desired_count   = 1
+  desired_count   = var.ecs_tasks_count
   launch_type     = var.launch_type
 
   network_configuration {
@@ -71,4 +77,12 @@ resource "aws_ecs_service" "app_service" {
   depends_on = [
     aws_lb_listener.http_listener
   ]
+
+  lifecycle {
+    ignore_changes = [
+      task_definition,
+      desired_count
+    ]
+  }
+
 }

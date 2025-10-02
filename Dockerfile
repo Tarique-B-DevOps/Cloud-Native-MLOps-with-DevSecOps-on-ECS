@@ -1,18 +1,21 @@
-# Base image
-FROM python:3.11-slim
+FROM python:3.13-slim-bookworm
 
-# Set working directory
-WORKDIR /app
+ARG MODEL_VERSION=""
 
-# Copy requirements and install
+WORKDIR /model
+
+# Install Utils
+RUN apt-get update && \
+    apt-get install curl -y
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy code and models directory
-COPY . .
+COPY *.py ./ 
+COPY models ./models
 
-# Expose API port
 EXPOSE 8888
 
-# Run FastAPI
+ENV MODEL_VERSION=${MODEL_VERSION}
+
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8888"]

@@ -6,9 +6,9 @@ resource "aws_security_group" "alb_sg" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "Allow Model Port"
-    from_port   = var.model_port
-    to_port     = var.model_port
+    description = "Allow HTTP Port"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
