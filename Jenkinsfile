@@ -39,6 +39,7 @@ pipeline {
         TF_VAR_ecs_tasks_count    = "${params.ecs_desired_task_count}"
         IMAGE_LATEST              = "latest"
         IAC_DIR                   = "infrastructure"
+        FRONTEND_DIR              = "frontend"
         MODEL_VERSION             = "${params.environment_type}-${params.model_version}"
         RESOURCE_PREFIX           = "price-prediction-model"
         JOB_TYPE                  = "${params.destroy ? 'Destroy' : 'Deployement'}"
@@ -175,6 +176,8 @@ pipeline {
                     env.ECR_REPO_URL     = sh(script: "terraform -chdir=$IAC_DIR output -raw ecr_repo_url", returnStdout: true).trim()
                     env.ECS_CLUSTER_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_cluster_name", returnStdout: true).trim()
                     env.ECS_SERVICE_NAME = sh(script: "terraform -chdir=$IAC_DIR output -raw ecs_service_name", returnStdout: true).trim()
+                    env.S3_BUCKET_NAME   = sh(script: "terraform -chdir=$IAC_DIR output -raw s3_bucket_name", returnStdout: true).trim()
+                    env.FRONTEND_URL     = sh(script: "terraform -chdir=$IAC_DIR output -raw frontend_url", returnStdout: true).trim()
 
                     echo """
                     📦 Extracted Terraform Outputs:
@@ -184,6 +187,8 @@ pipeline {
                     ECR_REPO_URL     = ${env.ECR_REPO_URL}
                     ECS_CLUSTER_NAME = ${env.ECS_CLUSTER_NAME}
                     ECS_SERVICE_NAME = ${env.ECS_SERVICE_NAME}
+                    S3_BUCKET_NAME   = ${env.S3_BUCKET_NAME}
+                    FRONTEND_URL     = ${env.FRONTEND_URL}
                     """
                 }
             }
@@ -194,10 +199,12 @@ pipeline {
                 expression { return params.destroy }
             }
             steps {
-                echo "⚠️ Destroy parameter is checked. Running terraform destroy..."
+                echo "⚠️ Destroy parameter is checked. Running Terraform destroy..."
 
                 input message: """
-                ⚠️ Are you sure you want to destroy all resources including ECR images?
+                ⚠️ Are you sure you want to destroy all resources including:
+                • ECR images
+                • Frontend files in S3 buckets with prefix $RESOURCE_PREFIX
                 This action will permanently delete all associated resources.
                 """,
                 ok: "✅ Proceed",
@@ -217,10 +224,20 @@ pipeline {
                     
                     if [ "\$IMAGES" != "[]" ]; then
                         aws ecr batch-delete-image --repository-name \$REPO --image-ids "\$IMAGES"
-                        echo "Deleted all images in \$REPO"
+                        echo "✅ Deleted all images in \$REPO"
                     else
-                        echo "ℹNo images found in \$REPO"
+                        echo "ℹ No images found in \$REPO"
                     fi
+                done
+
+                echo "Deleting all frontend files from S3 buckets with prefix: $RESOURCE_PREFIX"
+
+                BUCKETS=\$(aws s3api list-buckets --query "Buckets[?starts_with(Name, '$RESOURCE_PREFIX')].Name" --output text)
+
+                for BUCKET in \$BUCKETS; do
+                    echo "Deleting all objects in bucket: \$BUCKET"
+                    aws s3 rm s3://\$BUCKET --recursive
+                    echo "✅ All files deleted from \$BUCKET"
                 done
 
                 echo "🔧 Proceeding with Terraform destroy..."
@@ -259,6 +276,24 @@ pipeline {
                     pip install -r requirements.txt
 
                     python3 train.py
+                    """
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                dir("${env.FRONTEND_DIR}") {
+                    echo "🏗️ Building frontend with API=${API_ENDPOINT}, VERSION=${MODEL_VERSION}"
+                    sh """
+                    export VITE_API_URL=$API_ENDPOINT
+                    export VITE_APP_VERSION=$MODEL_VERSION
+
+                    npm ci
+                    npm run build
                     """
                 }
             }
@@ -383,17 +418,22 @@ pipeline {
                     echo "🚀 Preparing ECS service update for ML model..."
 
                     slackSend color: "#FFD700", message: """
-                    🛑 *Approval Required: ECS Service Update*
+                    🛑 *Approval Required: Deployment of ML Model & Frontend*
                     Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                     Environment: ${params.environment_type}
-                    Model Version: ${env.MODEL_VERSION}
+                    ML Model Version: ${env.MODEL_VERSION}
+                    Frontend Version: ${env.MODEL_VERSION}
                     ECS Service: ${env.ECS_SERVICE_NAME}
                     Cluster: ${env.ECS_CLUSTER_NAME}
+
+                    ⚡ After approval, the pipeline will:
+                    • Update ECS service with ML model ${env.MODEL_VERSION}
+                    • Deploy frontend version ${env.MODEL_VERSION} to S3
                     """
 
-                    input message: "⚡ Approve deployment of ML model version ${env.MODEL_VERSION} to ECS service ${env.ECS_SERVICE_NAME}?",
-                        ok: "✅ Deploy Model",
-                        submitter: "${env.APPROVER}"
+                    input message: "⚡ Approve deployment of ML model ${env.MODEL_VERSION} and frontend ${env.MODEL_VERSION}?",
+                    ok: "✅ Deploy Both",
+                    submitter: "${env.APPROVER}"
 
                     slackSend color: "#32CD32", message: """
                     🚀 *Deployment Approved by ${env.APPROVER}*
@@ -424,6 +464,20 @@ pipeline {
             }
         }
 
+        stage('Deploy Frontend to S3') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                dir("${env.FRONTEND_DIR}") {
+                    echo "🌐 Deploying Frontend to S3 bucket: $S3_BUCKET_NAME"
+                    sh """
+                    aws s3 sync dist/ s3://$S3_BUCKET_NAME --delete
+                    """
+                    echo "✅ Frontend available at: $FRONTEND_URL"
+                }
+            }
+        }
 
         // use terraform instead of aws cli to update the task def - optional.
         // stage('Deploy with Terraform') {
@@ -444,8 +498,8 @@ pipeline {
             }
             steps {
                 echo "✅ ML model successfully deployed and serving!"
-                echo "Inference ALB DNS: $ALB_DNS"
-                echo "API Gateway Endpoint: $API_ENDPOINT"
+                echo "Frontend URL: $FRONTEND_URL"
+                echo "API URL: $API_ENDPOINT"
             }
         }
     }
@@ -458,8 +512,10 @@ pipeline {
             Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Open>)
             Environment: ${params.environment_type}
             Model Version: ${env.MODEL_VERSION}
+            Frontend Version: ${env.MODEL_VERSION}
             ECS Service: ${env.ECS_SERVICE_NAME}
             API Endpoint: ${env.API_ENDPOINT}
+            Cloudfront URL: ${env.FRONTEND_URL}
             ALB DNS: ${env.ALB_DNS}
             """
         }

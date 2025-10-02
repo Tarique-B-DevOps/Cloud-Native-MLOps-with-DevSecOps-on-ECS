@@ -4,3 +4,8 @@
 **/*.tfstate.*
 **/__pycache__/
 models/*
+**/node_modules/
+**/dist/
+**/.vite/
+**/*.log
+.dccache

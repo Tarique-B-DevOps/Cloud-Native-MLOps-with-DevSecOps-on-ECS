@@ -37,3 +37,13 @@ output "region" {
   value = aws_ecs_cluster.cluster.region
 
 }
+
+output "s3_bucket_name" {
+  value = aws_s3_bucket.website.id
+
+}
+
+output "frontend_url" {
+  value = "https://${aws_cloudfront_distribution.web_distro.domain_name}"
+
+}
