@@ -201,7 +201,7 @@ pipeline {
                 This action will permanently delete all associated resources.
                 """,
                 ok: "✅ Proceed",
-                submitter: "tarique"
+                submitter: "${env.APPROVER}"
 
                 sh """
                 echo "Deleting all ECR images for repositories with prefix: $RESOURCE_PREFIX"
