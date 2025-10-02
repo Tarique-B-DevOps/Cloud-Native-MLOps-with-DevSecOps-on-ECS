@@ -406,17 +406,22 @@ pipeline {
                     echo "🚀 Preparing ECS service update for ML model..."
 
                     slackSend color: "#FFD700", message: """
-                    🛑 *Approval Required: ECS Service Update*
+                    🛑 *Approval Required: Deployment of ML Model & Frontend*
                     Job: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}console|Review>)
                     Environment: ${params.environment_type}
-                    Model Version: ${env.MODEL_VERSION}
+                    ML Model Version: ${env.MODEL_VERSION}
+                    Frontend Version: ${env.FRONTEND_VERSION ?: 'N/A'}
                     ECS Service: ${env.ECS_SERVICE_NAME}
                     Cluster: ${env.ECS_CLUSTER_NAME}
+
+                    ⚡ After approval, the pipeline will:
+                    • Update ECS service with ML model ${env.MODEL_VERSION}
+                    • Deploy frontend version ${env.FRONTEND_VERSION} to S3
                     """
 
-                    input message: "⚡ Approve deployment of ML model version ${env.MODEL_VERSION} to ECS service ${env.ECS_SERVICE_NAME}?",
-                        ok: "✅ Deploy Model",
-                        submitter: "${env.APPROVER}"
+                    input message: "⚡ Approve deployment of ML model ${env.MODEL_VERSION} and frontend ${env.FRONTEND_VERSION}?",
+                    ok: "✅ Deploy Both",
+                    submitter: "${env.APPROVER}"
 
                     slackSend color: "#32CD32", message: """
                     🚀 *Deployment Approved by ${env.APPROVER}*

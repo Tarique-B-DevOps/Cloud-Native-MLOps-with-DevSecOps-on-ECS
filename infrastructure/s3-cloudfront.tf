@@ -53,6 +53,7 @@ resource "aws_s3_bucket_policy" "web_distro_oac" {
   bucket = aws_s3_bucket.website.id
 
   policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
