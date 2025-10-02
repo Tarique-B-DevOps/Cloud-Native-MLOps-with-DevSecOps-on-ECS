@@ -269,13 +269,13 @@ pipeline {
             }
         }
 
-        stage('Build WebApp') {
+        stage('Build Frontend') {
             when {
                 expression { return !params.destroy }
             }
             steps {
                 dir("${env.FRONTEND_DIR}") {
-                    echo "🏗️ Building frontend webapp with API=${API_ENDPOINT}, VERSION=${MODEL_VERSION}"
+                    echo "🏗️ Building frontend with API=${API_ENDPOINT}, VERSION=${MODEL_VERSION}"
                     sh """
                     export VITE_API_URL=$API_ENDPOINT
                     export VITE_APP_VERSION=$MODEL_VERSION
@@ -447,6 +447,20 @@ pipeline {
             }
         }
 
+        stage('Deploy Frontend to S3') {
+            when {
+                expression { return !params.destroy }
+            }
+            steps {
+                dir("${env.FRONTEND_DIR}") {
+                    echo "🌐 Deploying Frontend to S3 bucket: $S3_BUCKET_NAME"
+                    sh """
+                    aws s3 sync dist/ s3://$S3_BUCKET_NAME --delete
+                    """
+                    echo "✅ Frontend available at: $FRONTEND_URL"
+                }
+            }
+        }
 
         // use terraform instead of aws cli to update the task def - optional.
         // stage('Deploy with Terraform') {
@@ -467,8 +481,8 @@ pipeline {
             }
             steps {
                 echo "✅ ML model successfully deployed and serving!"
-                echo "Inference ALB DNS: $ALB_DNS"
-                echo "API Gateway Endpoint: $API_ENDPOINT"
+                echo "Frontend URL: $FRONTEND_URL"
+                echo "API URL: $API_ENDPOINT"
             }
         }
     }
@@ -483,6 +497,7 @@ pipeline {
             Model Version: ${env.MODEL_VERSION}
             ECS Service: ${env.ECS_SERVICE_NAME}
             API Endpoint: ${env.API_ENDPOINT}
+            Cloudfront URL: ${env.FRONTEND_URL}
             ALB DNS: ${env.ALB_DNS}
             """
         }
