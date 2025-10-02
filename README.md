@@ -136,12 +136,21 @@ The Jenkins pipeline is parameterized for flexible deployments:
 
 Example Usage:
 
+- Deploy
 ```bash
 curl -X POST \
   "$JENKINS_URL/job/MLOps-Prediction-Model-ECS-Staging-v1/buildWithParameters" \
   --user "$JENKINS_USER_ID:$JENKINS_API_TOKEN" \
-  --data "model_version=v1.0.0&environment_type=prod&aws_region=ap-south-1&ecs_desired_task_count=1&destroy=false"
+  --data "model_version=v1.0.0&environment_type=prod&aws_region=ap-south-1&ecs_desired_task_count=1"
 ```
+- Destroy
+```bash
+curl -X POST \
+  "$JENKINS_URL/job/MLOps-Prediction-Model-ECS-Staging-v1/buildWithParameters" \
+  --user "$JENKINS_USER_ID:$JENKINS_API_TOKEN" \
+  --data "destroy=true"
+```
+
 
 
 ### 🔔 Notify Start
