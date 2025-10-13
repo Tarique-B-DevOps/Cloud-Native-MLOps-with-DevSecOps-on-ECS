@@ -180,8 +180,22 @@ Slack alerts for success, failure, or unstable builds.
 
 ## 🧩 Visual Workflow (Screenshots)
 
-*(All images are from real Jenkins runs & AWS console visualizations)*
+<img width="1893" height="896" alt="Image" src="https://github.com/user-attachments/assets/1c1962db-4465-49f8-96eb-53cd0ccdbf24" />
 
-![MLOps Pipeline Screenshot](https://github.com/user-attachments/assets/1c1962db-4465-49f8-96eb-53cd0ccdbf24)
-![AWS ECS Deployment](https://github.com/user-attachments/assets/e4302601-413c-4169-9077-43d8c8a6a78d)
-![Jenkins Dashboard](https://github.com/user-attachments/assets/86273ca2-6b64-411f-a780-6f32d202cc17)
+<img width="1905" height="898" alt="Image" src="https://github.com/user-attachments/assets/e4302601-413c-4169-9077-43d8c8a6a78d" />
+
+<img width="1891" height="899" alt="Image" src="https://github.com/user-attachments/assets/86273ca2-6b64-411f-a780-6f32d202cc17" />
+
+<img width="1681" height="410" alt="Image" src="https://github.com/user-attachments/assets/5de72d52-0acd-4df2-a3c8-5e792c17e57e" />
+
+<img width="1885" height="938" alt="Image" src="https://github.com/user-attachments/assets/6fb1626a-a068-430e-8c8b-60421ec62c3e" />
+
+<img width="1886" height="946" alt="Image" src="https://github.com/user-attachments/assets/1ab90369-8858-40f5-b596-6f1d9fced69d" />
+
+<img width="1494" height="402" alt="Image" src="https://github.com/user-attachments/assets/c87f8fdf-5f5a-43e6-9a59-a88ac4696732" />
+
+<img width="1652" height="967" alt="Image" src="https://github.com/user-attachments/assets/8f010750-edc3-45c9-b624-acdab9c625a3" />
+
+<img width="1109" height="870" alt="Image" src="https://github.com/user-attachments/assets/f1294717-5358-45c1-a2b0-aa23112557d3" />
+
+<img width="1865" height="1025" alt="Image" src="https://github.com/user-attachments/assets/bc372bfb-589f-417b-9f2c-40079ccccc85" />
