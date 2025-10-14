@@ -1,4 +1,17 @@
-# 🧠 End-to-End MLOps Pipeline with Jenkins, Terraform, Docker & AWS
+# Cloud-Native MLOps with AWS
+
+[![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/downloads/)
+[![Terraform](https://img.shields.io/badge/Terraform-1.13%2B-623CE4.svg)](https://www.terraform.io/)
+[![Jenkins](https://img.shields.io/badge/Jenkins-CI/CD-blue.svg)](https://www.jenkins.io/)
+[![AWS ECS](https://img.shields.io/badge/AWS%20ECS-ECS%2FECR%2FALB%2FAPI%20Gateway%2FS3%2FCloudFront-FF9900.svg)](https://aws.amazon.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerization-blue.svg)](https://www.docker.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-yellow.svg)](https://scikit-learn.org/)
+[![React](https://img.shields.io/badge/React-Frontend-61DAFB.svg)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-Bundler-green.svg)](https://vitejs.dev/)
+[![Pytest](https://img.shields.io/badge/Pytest-Testing-005C8C.svg)](https://docs.pytest.org/)
+[![Snyk](https://img.shields.io/badge/Snyk-Security-red.svg)](https://snyk.io/)
+[![Trivy](https://img.shields.io/badge/Trivy-Scanning-red.svg)](https://github.com/aquasecurity/trivy)
+[![Slack](https://img.shields.io/badge/Slack-Notifications-4A154B.svg)](https://slack.com/)
 
 A **complete, production-ready MLOps pipeline** for machine learning model deployment and automation — built with **Jenkins**, **Terraform**, **Docker**, **AWS ECS**, and a **React/Vite frontend**.
 
